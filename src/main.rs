@@ -58,11 +58,73 @@ const SOUTH_EMOJI_FACE: [&str; 8] = [
     "🌛",
 ];
 
+const NORTH_NERD_EMOJI: [&str; 28] = [
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+];
+
+const SOUTH_NERD_EMOJI: [&str; 28] = [
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+];
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum Mode {
     Name,
     Emoji,
+    NerdEmoji,
     Numeric,
 }
 impl std::fmt::Display for Mode {
@@ -100,6 +162,10 @@ struct Cli {
     #[arg(short, long, group="themode")]
     emoji: bool,
 
+    /// Equivalent to --mode nerd-emoji
+    #[arg(short, long="nerd-emoji", group="themode", short='N')]
+    nerd_emoji: bool,
+
     /// Instead of displaying the moon phase, show the lunar zodiac sign.
     #[arg(short, long)]
     zodiac: bool,
@@ -134,7 +200,7 @@ fn str_to_system_time(timestr: &str) -> Result<SystemTime, &'static str> {
     match from_human_time(timestr) {
         Ok(result) => {
             match result {
-                human_date_parser::ParseResult::DateTime(dt) => { 
+                human_date_parser::ParseResult::DateTime(dt) => {
                     let utc: DateTime<Utc> = dt.into();
                     Ok(utc.into())
                 },
@@ -174,7 +240,7 @@ fn emoji_with_vs(one_emoji_char: &str, vari: EmojiVariation) -> String {
 }
 
 fn to_emoji(phase: f64,
-            south_hemisphere: bool, 
+            south_hemisphere: bool,
             face: bool,
             vari: EmojiVariation)
     -> String {
@@ -202,6 +268,50 @@ fn to_emoji(phase: f64,
         emoji_with_vs(emoji, vari)
 }
 
+fn to_nerd_emoji(phase: f64,
+            south_hemisphere: bool,
+            vari: EmojiVariation)
+    -> String {
+        let emoji_set = if south_hemisphere {
+            SOUTH_NERD_EMOJI
+        } else {
+            NORTH_NERD_EMOJI
+        };
+        let emoji = match phase {
+            x if x <  0.035714286 => emoji_set[0],
+            x if x <  0.071428571 => emoji_set[1],
+            x if x <  0.10714286  => emoji_set[2],
+            x if x <  0.14285714  => emoji_set[3],
+            x if x <  0.17857143  => emoji_set[4],
+            x if x <  0.21428571  => emoji_set[5],
+            x if x <  0.25        => emoji_set[6],
+            x if x <  0.28571429  => emoji_set[7],
+            x if x <  0.32142857  => emoji_set[8],
+            x if x <  0.35714286  => emoji_set[9],
+            x if x <  0.39285714  => emoji_set[10],
+            x if x <  0.42857143  => emoji_set[11],
+            x if x <  0.46428571  => emoji_set[12],
+            x if x <  0.5         => emoji_set[13],
+            x if x <  0.51724138  => emoji_set[14],
+            x if x <  0.55172414  => emoji_set[15],
+            x if x <  0.5862069   => emoji_set[16],
+            x if x <  0.62068966  => emoji_set[17],
+            x if x <  0.65517241  => emoji_set[18],
+            x if x <  0.68965517  => emoji_set[19],
+            x if x <  0.72413793  => emoji_set[20],
+            x if x <  0.75862069  => emoji_set[21],
+            x if x <  0.79310345  => emoji_set[22],
+            x if x <  0.82758621  => emoji_set[23],
+            x if x <  0.86206897  => emoji_set[24],
+            x if x <  0.89655172  => emoji_set[25],
+            x if x <  0.93103448  => emoji_set[26],
+            x if x <  0.96551724  => emoji_set[27],
+            _ => emoji_set[0]
+        };
+
+        emoji_with_vs(emoji, vari)
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -211,6 +321,8 @@ fn main() {
         Mode::Emoji
     } else if cli.name {
         Mode::Name
+    } else if cli.nerd_emoji {
+        Mode::NerdEmoji
     } else if cli.face_emoji || cli.color_emoji || cli.text_emoji {
         // if user is setting emoji options, it implies they want emoji mode.
         Mode::Emoji
@@ -230,7 +342,7 @@ fn main() {
     let moontime: SystemTime;
     if cli.date.is_some() {
         match str_to_system_time(cli.date.unwrap().as_str()) {
-            Ok(t) => { moontime = t;} 
+            Ok(t) => { moontime = t;}
             Err(_) => {
                 println!("Invalid date!");
                 std::process::exit(2);
@@ -282,14 +394,28 @@ fn main() {
                         _ => "⛎",
                     }
                 };
-				println!("{}", emoji_with_vs(emoji, emoji_variation));
+                println!("{}", emoji_with_vs(emoji, emoji_variation));
+            }
+            Mode::NerdEmoji => {
+                let nerd_emoji = to_nerd_emoji(moon.phase,
+                                     cli.south_hemisphere,
+                                     emoji_variation);
+
+                println!("{}", nerd_emoji);
             },
         };
     } else {
         match mode {
-            Mode::Numeric => println!("{:1.2}", moon.phase),
-            Mode::Name    => println!("{}", moon.phase_name),
-            Mode::Emoji => {
+            Mode::Numeric   => println!("{:1.2}", moon.phase),
+            Mode::Name      => println!("{}", moon.phase_name),
+            Mode::NerdEmoji => {
+                let nerd_emoji = to_nerd_emoji(moon.phase,
+                                     cli.south_hemisphere,
+                                     emoji_variation);
+
+                println!("{}", nerd_emoji);
+            },
+            Mode::Emoji     => {
                 let emoji = to_emoji(moon.phase,
                                      cli.south_hemisphere,
                                      cli.face_emoji,

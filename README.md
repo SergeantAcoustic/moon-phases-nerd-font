@@ -17,8 +17,8 @@ Accepts dates in any format from crate `human-date-parser`, such as:
  - "in a month"
  - "a year ago"
 
-Includes an option to set Unicode variation characters for colour emoji or
-monochrome text.  See `--help` for documentation.
+Includes an option to set Unicode variation characters for colour emoji,
+monochrome text, or a nerd font moon emoji (requires a compatible [nerd font][https://github.com/ryanoasis/nerd-fonts]).  See `--help` for documentation.
 
 Examples
 ========
@@ -41,6 +41,8 @@ $ moon-phases --zodiac
 Taurus
 $ moon-phases --zodiac --emoji
 ♉
+$ moon-phases --nerd-emoji
+ 
 ```
 
 TODO
